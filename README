@@ -1,0 +1,268 @@
+=========
+GPSReader
+=========
+-------------------------------------------------------
+Python Class for communicating with the an GPS Receiver
+-------------------------------------------------------
+
+Introduction
+============
+This python class provides the options to communicate with an GPS Receiver. The access to the different GPS 
+sentences is done through a set of classes. One class for each NMEA sentence (e.g. NMEA_GGA, NMEA_GLL) but 
+this will be explained in detail below. 
+
+The NMEA sentences are implemented and tested based on the IEC 61162-3 standard. Some of the implemented 
+NMEA sentences have been changed in the latest version of the IEC61162 standard, thus there may be 
+problems using this class with newer GPS Receivers if there is no option to change the standard. 
+
+I created this Python Class because of the following reasons: 
+
+* As a training ground for learning Python *
+* I needed a some sort of access to a USB GPS receiver in my car *
+
+
+Overview over the classes 
+=========================
+GPSReader - GPSReader.py (Main Class) 
+-------------------------------------
+This class provides the general interface to the GPS receiver and the different NMEA sentences. I handles 
+the access to the serial interface and filters the NMEA sentences from the stream of data and provides the 
+access to the information of the supported NMEA sentences. 
+
+Currently the following NMEA sentences are supported: 
+
+* NMEA_GGA 
+* NMEA_GLL 
+* NMEA_RMC  
+* NMEA_VTG  
+* NMEA_DTM 
+* NMEA_GSV 
+* NMEA_GSA 
+
+As long as the communication is established and the GPS receiver has a valid GPS fix, one is able to get 
+the information from the GPSReceiver instance. 
+
+NMEA_GGA - NMEAtelegrams.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This class gives access to all interesting information of the GGA - Global Positioning System Fix Data - sentence. 
+The following functions are available: 
+
+* getPosition()
+
+  - returns: the current position as an instance of the class GPSPosition 
+
+* getAntennaHeight()
+
+  - returns: the antenna height of the GPS antenna
+
+* getTime()
+
+  - returns: the time of the last position fix
+
+
+NMEA_GLL - NMEAtelegrams.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GLL stands for Geographic position, latitude / longitude. This NMEA sentence containss only the position and the 
+time when the position has been acquired by the GPS Receiver. The following methods are available:
+
+* getTime()
+
+  - returns: the time of last position fix. 
+
+* getPosition()
+
+  - returns:  the current position as an instance of the class GPSPosition
+
+
+
+NMEA_RMC - NMEAtelegrams.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+RMC - the recommended minimum specific GPS/Transit data - contains the current position, the speed, the course, 
+the time and the date of the last position fix. Nowadays even the cheaper GPS receiver provide the other NMEA 
+sentences but in the earlier days they provided only the RMC sentence. 
+
+In the shipping industry the RMC is still used for some applications. The RMC contains the information for 
+the Magnetic Variation, thus sometimes the GPS receiver is configured to send the RMC message to a Gyro compass. 
+
+* getPosition()
+
+  - returns:  the current position as an instance of the class GPSPosition
+
+* getTime()
+
+  - returns: the time of the last position fix. 
+
+* getTimeDate()
+
+  - returns: the time and date of the last position fix 
+
+* getCourse()
+
+  - returns: the current TRUE course
+
+* getSpeed() 
+
+  - returns: the current Speed in kmh.
+
+NMEA_VTG - NMEAtelegrams.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The VTG sentence contains the information about the course and speed of an GPS receiver. (Course over ground and 
+Speed over Ground). The following methods are available, if the GPS acquired a valid position fix.
+
+* getCourse()
+
+  - returns: the current TRUE course
+
+* getSpeed() 
+
+  - parameters: 
+  
+    + unit: predefined with kmh 
+
+  - returns: the current Speed in kmh. If the parameter unit is set to any other string than kmh, the speed will be 
+    in knots 
+
+
+NMEA_DTM - NMEAtelegrams.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**this class is currently under construction and may change in the future**
+
+* getLocalDatumCode()
+
+  - returns: 
+
+* getAltitudeOffset()
+
+  - returns: 
+
+
+NMEA_GSV - NMEAtelegrams.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* getSatellitesInView()
+
+  - returns: a dictionary with all satellites that are currently seen and used by the GPS Receiver. Each entry 
+    of an satellite contains the elevation, the azimuth and the Signal-to-Noise reading. 
+
+
+NMEA_GSA - NMEAtelegrams.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* getSatellitesUsedForFix()
+
+  - returns: a list with all PNR numbers of the used satellites for the position fix.  
+
+* getPDOP()
+
+  - returns: the PDOP value for the current position fix 
+
+* getHDOP()
+
+  - returns: the HDOP value for the current position fix 
+
+* getVDOP() 
+
+  - returns: the VDOP value for the current position fix 
+
+
+Helping function - NMEAutils.py
+-------------------------------
+
+GPSPosition
+~~~~~~~~~~~
+This class represent a GPS position. It provides some methods for manipulation and verification of the position. e.g. 
+one can check what distance is between Point A and Point B. 
+
+* calculateBearing()
+
+  - parameters: 
+    
+    + destination: destination is an instance of GPSPosition
+
+  - returns: the bearing that is necessary to reach the destination. 
+
+* calculateDistance()
+
+  - parameters: 
+
+    + destination: destination is an instance of GPSPosition
+
+  - return: the distance between the GPSPosition and the destination in meters
+
+* projectGPSPosition() (currently not ready) 
+
+  - parameters: 
+
+    + distance: the distance that the new waypoint should be projected to in meters
+
+    + direction: the direction where the new waypoint will be put
+
+  - return: a new instance of the GPSPosition class with the projected position. 
+
+
+
+
+General helping functions
+~~~~~~~~~~~~~~~~~~~~~~~~~
+* CreateNMEAChkSum()
+
+  - parameters: 
+  
+    + sentence: NMEA sentence. (start with $ / start with $ and ends with * / start with $ and ends with NMEA checksum) 
+
+  - returns: This function creates a NMEA XOR Checksum for a NMEA sentence. 
+
+* VerifyNMEChkSum()
+  
+  - parameters:
+
+    + sentence: NMEA sentence as string
+
+  - returns: True if the checksum is valid / False if the checksum is NOT correct
+
+* convertKMHToKnots()
+  
+  - parameters
+
+    + kmh: any speed that is not 0.0 KM/H  
+
+  - returns: the converted speed in Knots
+
+* convertKnotsToKMH()
+
+  - parameters:
+
+    + knots: any speed that is not 0.0 knots 
+
+  - returns: the converted speed in KM/H
+
+* parseLatitude()
+
+  - parameters:
+    
+    + lat: the Latitude in dd.ddddd 
+
+    + ns: either N or S  
+
+  - returns: the latitude between -90 and +90 degrees
+
+* parseLongitude()
+
+  - parameters:
+    
+    + lon: longitude in decimal degrees
+
+    + ew: either E or W 
+
+  - returns: the longitude in between -180 and +180 
+
+* estimateDirection()
+
+  - parameters: 
+    
+    + CurrentCourse: the current course. e.g. read out from the VTG NMEA sentence
+
+    + DestCourse: the bearing 
+
+  - returns: a positive or negative value of the change of course in order to meet the new bearing
+
